@@ -65,35 +65,41 @@ protocol LoginClient {
     func login(callback: @escaping (User) -> Void)
 }
 
-//Real API component which confirms to LoginClient
-class LoginComponent: LoginClient {
-    let api = ApiClient.shared
-    func login(callback: @escaping (User) -> Void) {
-        api.login(callback: callback)
+//The Login components which holds a LoginClient abstract type
+class LoginComponent {
+    private let adapter: LoginClient
+    
+    init(adapter: LoginClient) {
+        self.adapter = adapter
+    }
+    
+    func performLogin(callback: @escaping (User) -> Void) {
+        adapter.login(callback: callback)
     }
 }
 
-//Mock Data components which confirms to LoginClient
-class MockLoginComponent: LoginClient {
+//The Mock Data Adapter Class
+class MockLoginClientAdapter: LoginClient {
     func login(callback: @escaping (User) -> Void) {
         callback(User(id: 0, name: "Test User", email: "testemail@domain.com", phone: "0711116687"))
     }
 }
 
-//The Adapter Class which hold the abstract type of LoginClient
+//The Real Data Adapter Class
 class LoginClientAdapter: LoginClient {
-    let client: LoginClient
+    let api: ApiClient
     
-    init(client: LoginClient) {
-        self.client = client
+    init(api: ApiClient) {
+        self.api = api
     }
     
     func login(callback: @escaping (User) -> Void) {
-        client.login(callback: callback)
+        api.login(callback: callback)
     }
 }
 
-let adapter = LoginClientAdapter(client: LoginComponent())
-adapter.login { user in
+let loginComponent = LoginComponent(adapter: LoginClientAdapter(api: ApiClient.shared))
+
+loginComponent.performLogin { user in
     print(user)
 }
